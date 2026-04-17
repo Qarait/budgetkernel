@@ -1,0 +1,29 @@
+[package]
+name = "budgetkernel"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+description = "A small, auditable, deterministic, zero-allocation budget accounting kernel."
+repository = "https://github.com/Qarait/budgetkernel"
+readme = "README.md"
+keywords = ["budget", "quota", "no-std", "deterministic", "kernel"]
+categories = ["no-std", "algorithms"]
+
+[features]
+default = ["std"]
+std = []
+safe-map = []
+
+[dependencies]
+
+[dev-dependencies]
+proptest = "1"
+criterion = { version = "0.5", default-features = false }
+
+
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
