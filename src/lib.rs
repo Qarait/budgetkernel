@@ -53,6 +53,4 @@
 pub mod dim;
 pub(crate) mod fixed_map;
 
-pub(crate) use fixed_map::FixedMap;
-
 pub use dim::{Dim, MAX_DIMS};
