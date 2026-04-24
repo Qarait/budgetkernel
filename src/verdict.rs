@@ -44,6 +44,29 @@ pub enum Verdict {
 }
 
 impl Verdict {
+    /// Return the worse of two verdicts.
+    ///
+    /// Severity order is:
+    ///
+    /// 1. [`Verdict::Exhausted`]
+    /// 2. [`Verdict::Warn`]
+    /// 3. [`Verdict::Continue`]
+    ///
+    /// If both verdicts have the same severity, this method is
+    /// left-biased: `self` wins. This is useful when reducing several
+    /// sequential single-dimension charges into one branch decision.
+    ///
+    /// This does **not** make multiple charges atomic. It only combines
+    /// their already-returned verdicts.
+    #[must_use]
+    pub const fn worst(self, other: Self) -> Self {
+        match (self, other) {
+            (Self::Exhausted(dim), _) | (_, Self::Exhausted(dim)) => Self::Exhausted(dim),
+            (Self::Warn(dim), _) | (_, Self::Warn(dim)) => Self::Warn(dim),
+            (Self::Continue, Self::Continue) => Self::Continue,
+        }
+    }
+
     /// `true` if this verdict indicates the budget has headroom
     /// (i.e., not `Exhausted`). Convenience for the common
     /// `while budget.charge(...).is_continuing() { ... }` pattern.
@@ -96,5 +119,41 @@ mod tests {
         assert!(!v.is_continuing());
         assert!(v.is_exhausted());
         assert_eq!(v.dimension(), Some(Dim::Millis));
+    }
+
+    #[test]
+    fn worst_prefers_exhausted_over_warn_and_continue() {
+        assert_eq!(
+            Verdict::Continue.worst(Verdict::Exhausted(Dim::Tokens)),
+            Verdict::Exhausted(Dim::Tokens)
+        );
+        assert_eq!(
+            Verdict::Warn(Dim::Millis).worst(Verdict::Exhausted(Dim::Bytes)),
+            Verdict::Exhausted(Dim::Bytes)
+        );
+    }
+
+    #[test]
+    fn worst_prefers_warn_over_continue() {
+        assert_eq!(
+            Verdict::Continue.worst(Verdict::Warn(Dim::Tokens)),
+            Verdict::Warn(Dim::Tokens)
+        );
+        assert_eq!(
+            Verdict::Warn(Dim::Millis).worst(Verdict::Continue),
+            Verdict::Warn(Dim::Millis)
+        );
+    }
+
+    #[test]
+    fn worst_is_left_biased_for_same_severity() {
+        assert_eq!(
+            Verdict::Warn(Dim::Tokens).worst(Verdict::Warn(Dim::Millis)),
+            Verdict::Warn(Dim::Tokens)
+        );
+        assert_eq!(
+            Verdict::Exhausted(Dim::Calls).worst(Verdict::Exhausted(Dim::Bytes)),
+            Verdict::Exhausted(Dim::Calls)
+        );
     }
 }
