@@ -36,7 +36,7 @@
 //!    `present[i]` is `true`.
 //!
 //! 5. **Zero allocation, constant footprint.** Stack only. Every method is
-//!    `O(1)`; `len` is `O(MAX_DIMS)` with `MAX_DIMS` fixed at compile time.
+//!    `O(1)` except test-only helpers that iterate [`Dim::ALL`].
 
 // We use `pub(crate)` on items in this module even though the module
 // itself is `pub(crate)`. The item-level visibility is defense in depth:
@@ -57,6 +57,7 @@ use crate::dim::{Dim, MAX_DIMS};
 /// A slot may only be read when the matching `present` flag is `true`.
 /// See the module-level safety model for the full set of invariants.
 #[cfg(not(feature = "safe-map"))]
+#[derive(Debug)]
 pub(crate) struct FixedMap {
     slots: [MaybeUninit<u64>; MAX_DIMS],
     present: [bool; MAX_DIMS],
@@ -78,14 +79,20 @@ impl FixedMap {
     /// Return the value stored for `dim`, or `None` if absent.
     pub(crate) fn get(&self, dim: Dim) -> Option<u64> {
         let idx = dim.index();
-        if self.present.get(idx).copied().unwrap_or(false) {
-            let mu = self.slots.get(idx).copied();
-            // SAFETY: Invariant 1 — the guard above confirmed present[idx]
-            // is true, so slots[idx] was written by a prior insert call and
-            // holds a valid, initialised u64.
-            // Invariant 2 — idx is Dim::index(), in 0..MAX_DIMS, so
-            // slots.get(idx) returns Some and mu is Some.
-            mu.map(|s| unsafe { s.assume_init() })
+        // SAFETY and bounds justification for direct indexing below:
+        // - Invariant 2: `idx = Dim::index()` returns a value in `0..MAX_DIMS`
+        //   by construction. `Dim` has exactly MAX_DIMS variants with
+        //   `#[repr(u8)]` discriminants 0..=7. `self.slots` and `self.present`
+        //   both have length MAX_DIMS. Therefore `idx` is in bounds for both
+        //   arrays and direct indexing cannot panic.
+        #[allow(clippy::indexing_slicing)]
+        if self.present[idx] {
+            // SAFETY: Invariant 1 — `present[idx] == true` above guarantees
+            // that `slots[idx]` was written by a prior `insert` call and
+            // holds a valid, initialized `u64`. Invariant 4 — `u64: Copy`,
+            // so reading via `assume_init` does not move ownership.
+            #[allow(clippy::indexing_slicing)]
+            Some(unsafe { self.slots[idx].assume_init() })
         } else {
             None
         }
@@ -98,20 +105,23 @@ impl FixedMap {
     /// block reads the *previous* value, which requires the presence guard.
     pub(crate) fn insert(&mut self, dim: Dim, value: u64) -> Option<u64> {
         let idx = dim.index();
-        let prev = if self.present.get(idx).copied().unwrap_or(false) {
-            let mu = self.slots.get(idx).copied();
-            // SAFETY: Invariant 1 — present[idx] is true, so slots[idx]
-            // holds a valid, initialised u64 from a prior insert call.
-            // Invariant 2 — idx is Dim::index(), in 0..MAX_DIMS.
-            mu.map(|s| unsafe { s.assume_init() })
+        // Bounds justification: identical to `get` — see that method's
+        // comment for the full reasoning. `idx` is in `0..MAX_DIMS` by
+        // construction and both arrays have length MAX_DIMS.
+        #[allow(clippy::indexing_slicing)]
+        let prev = if self.present[idx] {
+            // SAFETY: Invariant 1 — `present[idx] == true` guarantees
+            // `slots[idx]` was written by a prior `insert` and is initialized.
+            // Invariant 4 — `u64: Copy`, no ownership issue.
+            #[allow(clippy::indexing_slicing)]
+            Some(unsafe { self.slots[idx].assume_init() })
         } else {
             None
         };
-        if let Some(slot) = self.slots.get_mut(idx) {
-            *slot = MaybeUninit::new(value);
-        }
-        if let Some(flag) = self.present.get_mut(idx) {
-            *flag = true;
+        #[allow(clippy::indexing_slicing)]
+        {
+            self.slots[idx] = MaybeUninit::new(value);
+            self.present[idx] = true;
         }
         prev
     }
@@ -126,11 +136,11 @@ impl FixedMap {
         self.present.get(dim.index()).copied().unwrap_or(false)
     }
 
-    /// Return the number of dimensions that have a stored value.
-    ///
-    /// Iterates the presence array; no `unsafe` code required.
-    pub(crate) fn len(&self) -> usize {
-        self.present.iter().filter(|&&b| b).count()
+    /// `true` if no slots are present. Short-circuits on the first
+    /// present slot, so it is faster than counting all present slots on
+    /// nearly-full maps. No `unsafe` needed.
+    pub(crate) fn is_empty(&self) -> bool {
+        !self.present.iter().any(|&p| p)
     }
 }
 
@@ -143,6 +153,7 @@ impl FixedMap {
 /// variant. Unset slots hold `0`; a slot is only returned by `get` once
 /// `insert` has been called for that dimension.
 #[cfg(feature = "safe-map")]
+#[derive(Debug)]
 pub(crate) struct FixedMap {
     slots: [u64; MAX_DIMS],
     present: [bool; MAX_DIMS],
@@ -195,11 +206,11 @@ impl FixedMap {
         self.present.get(dim.index()).copied().unwrap_or(false)
     }
 
-    /// Return the number of dimensions that have a stored value.
-    ///
-    /// Iterates the presence array; no `unsafe` code anywhere in this variant.
-    pub(crate) fn len(&self) -> usize {
-        self.present.iter().filter(|&&b| b).count()
+    /// `true` if no slots are present. Short-circuits on the first
+    /// present slot, so it is faster than counting all present slots on
+    /// nearly-full maps. No `unsafe` needed.
+    pub(crate) fn is_empty(&self) -> bool {
+        !self.present.iter().any(|&p| p)
     }
 }
 
@@ -213,10 +224,17 @@ mod tests {
     use super::*;
     use crate::dim::Dim;
 
+    fn present_count(map: &FixedMap) -> usize {
+        Dim::ALL
+            .into_iter()
+            .filter(|&dim| map.contains(dim))
+            .count()
+    }
+
     #[test]
     fn new_map_is_empty() {
         let m = FixedMap::new();
-        assert_eq!(m.len(), 0);
+        assert!(m.is_empty());
         for dim in Dim::ALL {
             assert!(!m.contains(dim));
             assert!(m.get(dim).is_none());
@@ -254,16 +272,24 @@ mod tests {
     }
 
     #[test]
-    fn len_tracks_distinct_dimensions() {
+    fn present_count_tracks_distinct_dimensions() {
         let mut m = FixedMap::new();
-        assert_eq!(m.len(), 0);
+        assert_eq!(present_count(&m), 0);
         m.insert(Dim::Tokens, 1);
-        assert_eq!(m.len(), 1);
+        assert_eq!(present_count(&m), 1);
         m.insert(Dim::Bytes, 2);
-        assert_eq!(m.len(), 2);
-        // Re-inserting the same dim must not increment len.
+        assert_eq!(present_count(&m), 2);
+        // Re-inserting the same dim must not increment the present count.
         m.insert(Dim::Tokens, 3);
-        assert_eq!(m.len(), 2);
+        assert_eq!(present_count(&m), 2);
+    }
+
+    #[test]
+    fn is_empty_tracks_insertions() {
+        let mut m = FixedMap::new();
+        assert!(m.is_empty());
+        let _ = m.insert(Dim::Tokens, 1);
+        assert!(!m.is_empty());
     }
 
     #[test]
@@ -282,19 +308,19 @@ mod tests {
         for (i, dim) in Dim::ALL.iter().enumerate() {
             m.insert(*dim, i as u64);
         }
-        assert_eq!(m.len(), MAX_DIMS);
+        assert_eq!(present_count(&m), MAX_DIMS);
         for (i, dim) in Dim::ALL.iter().enumerate() {
             assert_eq!(m.get(*dim), Some(i as u64));
         }
     }
 
     #[test]
-    fn insert_overwrites_without_growing_len() {
+    fn insert_overwrites_without_growing_present_count() {
         let mut m = FixedMap::new();
         m.insert(Dim::Calls, 1);
         m.insert(Dim::Calls, 2);
         m.insert(Dim::Calls, 3);
-        assert_eq!(m.len(), 1);
+        assert_eq!(present_count(&m), 1);
         assert_eq!(m.get(Dim::Calls), Some(3));
     }
 }
