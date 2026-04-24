@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  verify:
+    name: Verify stable toolchain
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install stable Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt
+          rustup default stable
+          rustc --version
+          cargo --version
+
+      - name: Build default
+        run: cargo build
+
+      - name: Build no-default-features
+        run: cargo build --no-default-features
+
+      - name: Build safe-map
+        run: cargo build --features safe-map
+
+      - name: Build no-default-features + safe-map
+        run: cargo build --no-default-features --features safe-map
+
+      - name: Test default
+        run: cargo test
+
+      - name: Test no-default-features
+        run: cargo test --no-default-features
+
+      - name: Test safe-map
+        run: cargo test --features safe-map
+
+      - name: Test no-default-features + safe-map
+        run: cargo test --no-default-features --features safe-map
+
+      - name: Run examples default
+        run: |
+          cargo run --example llm_pipeline
+          cargo run --example task_runner
+          cargo run --example http_quota
+
+      - name: Run examples no-default-features
+        run: |
+          cargo run --no-default-features --example llm_pipeline
+          cargo run --no-default-features --example task_runner
+          cargo run --no-default-features --example http_quota
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Rustfmt
+        run: cargo fmt --check
+
+      - name: Docs default
+        run: cargo doc --no-deps
+
+      - name: Docs no-default-features
+        run: cargo doc --no-deps --no-default-features
+
+      - name: Compile benchmark default
+        run: cargo bench --bench charge --no-run
+
+      - name: Compile benchmark safe-map
+        run: cargo bench --bench charge --features safe-map --no-run
+
+  miri:
+    name: MIRI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install nightly Rust with MIRI
+        run: |
+          rustup toolchain install nightly --profile minimal --component miri
+          rustup +nightly component list --installed
+          cargo +nightly miri setup
+
+      - name: Run MIRI library tests
+        run: cargo +nightly miri test --lib
+
+  msrv:
+    name: MSRV 1.75
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Rust 1.75
+        run: |
+          rustup toolchain install 1.75.0 --profile minimal
+          rustc +1.75.0 --version
+          cargo +1.75.0 --version
+
+      - name: Build library default
+        run: cargo +1.75.0 build --lib
+
+      - name: Build library no-default-features
+        run: cargo +1.75.0 build --lib --no-default-features
+
+      - name: Build library safe-map
+        run: cargo +1.75.0 build --lib --features safe-map
+
+      - name: Build library no-default-features + safe-map
+        run: cargo +1.75.0 build --lib --no-default-features --features safe-map
