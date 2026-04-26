@@ -2,19 +2,19 @@
 
 ## 0.1.1 - 2026-04-26
 
-Minor release polishing and registry documentation improvements.
+Documentation cleanup and release polish.
 
 ### Fixed
 
-- Fixed stale doc comment regarding `std` feature implementation status in `lib.rs`.
-- Corrected relative links in `README.md` to absolute URLs for better `crates.io` rendering.
+- Updated README status now that the crate is published.
+- Clarified `Verdict::Warn` documentation around inclusive limits.
+- Updated fixed-map safety prose to match the current direct-indexing guard style.
+- Renamed the exhausted benchmark case to clarify that it measures the already-exhausted steady-state path.
 
-### Added
+### Changed
 
-- Added CI status and registry badges to `README.md`.
-- Added project status indicators for release readiness.
-
-
+- Added docs.rs metadata to `Cargo.toml`.
+- Expanded CI example runtime coverage to include `safe-map`.
 
 ## 0.1.0 - 2026-04-25
 

@@ -9,8 +9,10 @@
 //! ## Firing semantics
 //!
 //! [`Verdict::Warn`] is returned on every charge where a dimension's
-//! running total exceeds its warn threshold but has not yet reached its
-//! limit. It is **not** one-shot. The kernel deliberately holds no
+//! running total exceeds its warn threshold but has not exceeded its
+//! limit. It is **not** one-shot. [`Verdict::Warn`] may still be
+//! returned at `spent == limit`; exhaustion begins only when
+//! `spent > limit`. The kernel deliberately holds no
 //! suppression state: if it did, `Verdict` would depend on prior calls
 //! and break determinism. Callers who want one-shot warning behavior
 //! (warn once per run, then suppress) track that in their adapter.

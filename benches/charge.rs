@@ -75,7 +75,7 @@ fn charge_benches(c: &mut Criterion) {
         });
     });
 
-    group.bench_function("exhausted_single_dim", |b| {
+    group.bench_function(concat!("already_exhausted_", "single_dim"), |b| {
         let mut budget = build_exhausted_budget();
 
         b.iter(|| {

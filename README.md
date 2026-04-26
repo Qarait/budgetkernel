@@ -313,7 +313,7 @@ It measures:
 
 1. continuing single-dimension charge
 2. warning single-dimension charge
-3. exhausted single-dimension charge
+3. already-exhausted single-dimension charge
 4. three sequential charges as a checkpoint pattern
 
 Benchmark numbers are local measurements and vary by CPU, compiler, target, optimization level, and feature configuration. Treat them as a baseline for your environment, not a universal guarantee.
@@ -338,4 +338,8 @@ Adapters can build those behaviors around the kernel.
 
 ## Status
 
-The crate is release-ready for v0.1.1.
+Released on crates.io.
+
+Current version: `0.1.1`.
+
+The core kernel, examples, property tests, benchmarks, design/security docs, README, CHANGELOG, CI, and release packaging are in place.

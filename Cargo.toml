@@ -6,6 +6,7 @@ rust-version = "1.75"
 license = "MIT"
 description = "A small, auditable, deterministic, zero-allocation budget accounting kernel."
 repository = "https://github.com/Qarait/budgetkernel"
+documentation = "https://docs.rs/budgetkernel"
 readme = "README.md"
 exclude = [
     ".github/**",

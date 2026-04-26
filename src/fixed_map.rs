@@ -16,15 +16,18 @@
 //! ## Safety model (unsafe variant)
 //!
 //! 1. **Presence guards reads.** `present[i]` is the sole authority on
-//!    whether `slots[i]` may be read. Every `assume_init` call is preceded
-//!    by a `.get(idx).copied().unwrap_or(false)` guard in the same function
-//!    body. No code path reads a slot without that guard in place.
+//!    whether `slots[i]` may be read. `assume_init()` is called only after
+//!    checking the corresponding `present[idx]` guard. If `present[idx]`
+//!    is true, the slot was initialized by a prior `insert`; if false,
+//!    the slot is never read.
 //!
 //! 2. **Bounded indexing.** All slot access uses [`Dim::index()`] as the
 //!    subscript, which the enum's exhaustive discriminant assignment holds
 //!    to `0..MAX_DIMS`. No raw `usize` is accepted at the public boundary.
-//!    `.get(idx)` / `.get_mut(idx)` are used throughout; direct `arr[idx]`
-//!    indexing does not appear in this file.
+//!    The unsafe variant derives indexes only from [`Dim::index()`].
+//!    Direct indexing is used only with a local bounds justification:
+//!    [`Dim::index()`] returns a value in `0..MAX_DIMS`, and the arrays
+//!    have length `MAX_DIMS`.
 //!
 //! 3. **Exclusive mutation.** Plain owned struct, no interior mutability.
 //!    All writes go through `&mut self`; the borrow checker guarantees no

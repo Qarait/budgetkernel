@@ -192,7 +192,7 @@ The benchmark suite measures:
 
 - continuing single-dimension charge
 - warning single-dimension charge
-- exhausted single-dimension charge
+- already-exhausted single-dimension charge
 - three sequential charges as a checkpoint pattern
 
 The benchmark results should not be overclaimed. They are local measurements and may vary by CPU, compiler, target, optimization level, and feature configuration.

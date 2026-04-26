@@ -63,6 +63,18 @@ jobs:
           cargo run --no-default-features --example task_runner
           cargo run --no-default-features --example http_quota
 
+      - name: Run examples safe-map
+        run: |
+          cargo run --features safe-map --example llm_pipeline
+          cargo run --features safe-map --example task_runner
+          cargo run --features safe-map --example http_quota
+
+      - name: Run examples no-default-features + safe-map
+        run: |
+          cargo run --no-default-features --features safe-map --example llm_pipeline
+          cargo run --no-default-features --features safe-map --example task_runner
+          cargo run --no-default-features --features safe-map --example http_quota
+
       - name: Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
