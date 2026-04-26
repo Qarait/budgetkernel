@@ -7,6 +7,10 @@ license = "MIT"
 description = "A small, auditable, deterministic, zero-allocation budget accounting kernel."
 repository = "https://github.com/Qarait/budgetkernel"
 readme = "README.md"
+exclude = [
+    ".github/**",
+    ".gitignore",
+]
 keywords = ["budget", "quota", "no-std", "deterministic", "kernel"]
 categories = ["no-std", "algorithms"]
 
