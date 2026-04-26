@@ -336,4 +336,4 @@ Adapters can build those behaviors around the kernel.
 
 Work in progress toward v0.1.0.
 
-The core kernel, examples, property tests, benchmarks, design/security docs, and README are in place. CI, release packaging, and publication prep are still being finalized.
+The core kernel, examples, property tests, benchmarks, design/security docs, and README are in place. The crate is release-ready for v0.1.0. Publication to crates.io is pending.
