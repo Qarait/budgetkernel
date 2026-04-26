@@ -1,10 +1,10 @@
 # budgetkernel
 
-[![CI](https://github.com/Qarait/budgetkernel/actions/workflows/verify.yml/badge.svg)](https://github.com/Qarait/budgetkernel/actions)
+[![CI](https://github.com/Qarait/budgetkernel/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Qarait/budgetkernel/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/budgetkernel.svg)](https://crates.io/crates/budgetkernel)
 [![Docs.rs](https://docs.rs/budgetkernel/badge.svg)](https://docs.rs/budgetkernel)
 
-A small, auditable, deterministic, zero-allocation budget accounting kernel.
+A small, auditable, deterministic budget accounting kernel with zero heap allocation on the hot path.
 
 Declare budgets across fixed dimensions, charge them at runtime boundaries, and get a verdict:
 
@@ -14,7 +14,7 @@ Warn(dim)
 Exhausted(dim)
 ```
 
-The crate is intentionally narrow. It does not read clocks, perform I/O, allocate on the hot path, refill budgets automatically, persist state, or coordinate across machines. The caller owns measurement and policy. `budgetkernel` owns bounded accounting.
+The crate is intentionally narrow. It does not read clocks, perform I/O, perform heap allocation on the hot path, refill budgets automatically, persist state, or coordinate across machines. The caller owns measurement and policy. `budgetkernel` owns bounded accounting.
 
 ## Why this exists
 

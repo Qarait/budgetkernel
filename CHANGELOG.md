@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.2 - 2026-04-26
+
+Public presentation polish.
+
+### Fixed
+
+- Fixed the GitHub Actions CI badge URL in `README.md`.
+- Clarified zero-allocation wording as zero heap allocation on the hot path.
+- Added a rustdoc-visible link to the security model.
+- Ensured branch-specific public links point to `master`.
+
+### Changed
+
+- Updated the package description to use more precise hot-path allocation wording.
+
 ## 0.1.1 - 2026-04-26
 
 Documentation cleanup and release polish.

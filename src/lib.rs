@@ -5,8 +5,9 @@
 //! time. API gateways burn request quotas. The stopping logic is always
 //! the same: accumulate, compare, decide.
 //!
-//! `budgetkernel` isolates that decision into a deterministic,
-//! zero-allocation accounting kernel. Declare budgets across fixed
+//! `budgetkernel` isolates that decision into a deterministic budget
+//! accounting kernel with zero heap allocation on the hot path. Declare
+//! budgets across fixed
 //! dimensions, charge them at runtime boundaries, and receive one of
 //! three verdicts: [`Verdict::Continue`], [`Verdict::Warn`], or
 //! [`Verdict::Exhausted`].
@@ -65,6 +66,13 @@
 //!   fully-safe variant. Identical semantics, slightly higher per-call
 //!   initialization cost. No `unsafe` anywhere in the crate when this
 //!   feature is active.
+//!
+//! ## Safety and security model
+//!
+//! The only current unsafe boundary is the internal fixed-map
+//! implementation. See the
+//! [security model](https://github.com/Qarait/budgetkernel/blob/master/docs/SECURITY_MODEL.md)
+//! for invariants, lint posture, threat model, and verification details.
 //!
 //! ## Non-goals
 //!
