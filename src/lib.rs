@@ -60,8 +60,7 @@
 //!
 //! ## Features
 //!
-//! - `std` (default): enables `std::error::Error` impls for error types
-//!   (wired in a later phase).
+//! - `std` (default): enables `std::error::Error` impls for error types.
 //! - `safe-map`: replaces the `MaybeUninit`-based internal map with a
 //!   fully-safe variant. Identical semantics, slightly higher per-call
 //!   initialization cost. No `unsafe` anywhere in the crate when this

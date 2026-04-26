@@ -1,5 +1,9 @@
 # budgetkernel
 
+[![CI](https://github.com/Qarait/budgetkernel/actions/workflows/verify.yml/badge.svg)](https://github.com/Qarait/budgetkernel/actions)
+[![Crates.io](https://img.shields.io/crates/v/budgetkernel.svg)](https://crates.io/crates/budgetkernel)
+[![Docs.rs](https://docs.rs/budgetkernel/badge.svg)](https://docs.rs/budgetkernel)
+
 A small, auditable, deterministic, zero-allocation budget accounting kernel.
 
 Declare budgets across fixed dimensions, charge them at runtime boundaries, and get a verdict:
@@ -67,9 +71,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 For complete examples, see:
 
-1. `examples/llm_pipeline.rs`
-2. `examples/task_runner.rs`
-3. `examples/http_quota.rs`
+1. [examples/llm_pipeline.rs](https://github.com/Qarait/budgetkernel/blob/master/examples/llm_pipeline.rs)
+2. [examples/task_runner.rs](https://github.com/Qarait/budgetkernel/blob/master/examples/task_runner.rs)
+3. [examples/http_quota.rs](https://github.com/Qarait/budgetkernel/blob/master/examples/http_quota.rs)
 
 ## Core API
 
@@ -220,7 +224,7 @@ The crate is designed around these guarantees:
 
 The no-panic guarantee means no caller-triggerable panics from valid API usage. Internal `debug_assert!` checks may guard kernel invariants during debug builds.
 
-See [docs/DESIGN.md](docs/DESIGN.md) for the full design rationale.
+See [docs/DESIGN.md](https://github.com/Qarait/budgetkernel/blob/master/docs/DESIGN.md) for the full design rationale.
 
 ## Safety model
 
@@ -230,7 +234,7 @@ The `safe-map` feature replaces that implementation with fully initialized array
 
 Both variants are tested with the same unit and property tests.
 
-See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for invariants, threat model, lint posture, and verification details.
+See [docs/SECURITY_MODEL.md](https://github.com/Qarait/budgetkernel/blob/master/docs/SECURITY_MODEL.md) for invariants, threat model, lint posture, and verification details.
 
 ## Feature flags
 
@@ -334,6 +338,4 @@ Adapters can build those behaviors around the kernel.
 
 ## Status
 
-Work in progress toward v0.1.0.
-
-The core kernel, examples, property tests, benchmarks, design/security docs, and README are in place. The crate is release-ready for v0.1.0. Publication to crates.io is pending.
+The crate is release-ready for v0.1.1.

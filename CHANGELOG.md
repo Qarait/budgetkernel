@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.1 - 2026-04-26
+
+Minor release polishing and registry documentation improvements.
+
+### Fixed
+
+- Fixed stale doc comment regarding `std` feature implementation status in `lib.rs`.
+- Corrected relative links in `README.md` to absolute URLs for better `crates.io` rendering.
+
+### Added
+
+- Added CI status and registry badges to `README.md`.
+- Added project status indicators for release readiness.
+
+
+
 ## 0.1.0 - 2026-04-25
 
 Initial release.
